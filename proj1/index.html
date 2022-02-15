@@ -24,33 +24,31 @@
 	<p><b>Cube</b> (Num Triangles: 6, Super Sample Rate: 1)</p>
 
 	<div class="container">
-		
-	<img src="./images/cube_ss_1_s_cropped.png" width="400" />
 	<p><b>Standard Rasterizer</b></p>
+	<img src="./images/cube_ss_1_s_cropped.png" width="400" />
 	<p>Average Render Time: 0.156962 seconds</p>
 	</div>
 
 	<div class="container" >
-	<img src="./images/cube_ss_1_f_cropped.png" width="400" />
 	<p><b>Fast Rasterizer</b></p>
+	<img src="./images/cube_ss_1_f_cropped.png" width="400" />
+	
 	<p>Average Render Time: 0.1557911 seconds</p>
 	</div>
 	<p>Improvement: 1.39%</p>
 	<p> </p>
 	<p><b>Cube</b> (Num Triangles: 6, Super Sample Rate: 16)</p>
-	<div width = 100%>
-	<div class="container">
-		
-		<img src="./images/cube_ss_16_s_cropped.png" width="40%" />
-		<p><b>Standard Rasterizer</b></p>
-		<p>Average Render Time: 0.4846569 seconds</p>
-	  </div>
 
-	  <div class="container">
-		<img src="./images/cube_ss_16_f_cropped.png" width="40%" />
-		<p><b>Fast Rasterizer</b></p>
-		<p>Average Render Time: 0.4425137 seconds</p>
+	<div class="container">
+	<p><b>Standard Rasterizer</b></p>
+	<img src="./images/cube_ss_16_s_cropped.png" width="400" />
+	<p>Average Render Time: 0.4846569 seconds</p>
 	</div>
+
+	<div class="container">
+	<p><b>Fast Rasterizer</b></p>		
+	<img src="./images/cube_ss_16_f_cropped.png" width="400" />
+	<p>Average Render Time: 0.4425137 seconds</p>
 	</div>
 	
 	<p>Improvement: 9.2766%</p>
@@ -58,36 +56,37 @@
 
 	<p><b>Degenerate Square</b> (Num Triangles: 1000, Super Sample Rate: 1)</p>
 	<div class="container">
-		
-		<img src="./images/hardcore_ss_1_s_cropped.png" width="400" />
 		<p><b>Standard Rasterizer</b></p>
+		<img src="./images/hardcore_ss_1_s_cropped.png" width="400" />
+		
 		<p>Average Render Time: 1.348856 seconds</p>
 	  </div>
 
 	  <div class="container">
-		<img src="./images/hardcore_ss_1_f_cropped.png" width="400" />
 		<p><b>Fast Rasterizer</b></p>
+		<img src="./images/hardcore_ss_1_f_cropped.png" width="400" />
 		<p>Average Render Time: 0.1628616 seconds</p>
 	  </div>
-	</div>
 
 	<p>Improvement: 728.22%</p>
 
 	<p><b>Degenerate Square</b> (Num Triangles: 1000, Super Sample Rate: 16)</p>
 	<div class="container">
-		
-		<img src="./images/hardcore_ss_16_s_cropped.png" width="400" />
 		<p><b>Standard Rasterizer</b></p>
+		<img src="./images/hardcore_ss_16_s_cropped.png" width="400" />
+		
 		<p>Average Render Time: 18.86615 seconds</p>
 	  </div>
 
 	  <div class="container">
-		<img src="./images/hardcore_ss_16_f_cropped.png" width="400" />
 		<p><b>Fast Rasterizer</b></p>
+		<img src="./images/hardcore_ss_16_f_cropped.png" width="400" />
+		
 		<p>Average Render Time: 0.5512954 seconds</p>
 	  </div>
-	</div>
 	<p>Improvement: 3,322.15%</p>
+
+	<p1>(All averages calculated over 10 renders)</p1>
 	</center>
 	<p>As you can see for simpler scenes the speed-up is minor, but as the scenes get more complex 
 		the effects of the optimization become more visible. In the nightmare scenario presented by
@@ -108,29 +107,25 @@
 		  Running this with the triangle rasterization code from before I got the results below. </p>
 	
 	<center>
-		<div class="container">
-			<p><b>1 Sample Per Pixel</b></p>
-			<img src="./images/Task2_2_SS1_cropped.png" width="650px" />
-			
-			</div>
-			<div class="container">
-				<p><b>4 Samples Per Pixel</b></p>
-				<img src="./images/Task2_2_SS4_cropped.png" width="650px" />
-				
-				</div>
-			<div class="container">
-				<p><b>9 Samples Per Pixel</b></p>
-				<img src="./images/Task2_2_SS9_cropped.png" width="650px" />
-				
-				</div>
-	
-			<div class="container">
-				<p><b>16 Samples Per Pixel</b></p>
-			<img src="./images/Task2_2_SS16_cropped.png" width="650px" />
-			
-			
-			</div>
-		</div>
+	<div class="container">
+		<p><b>1 Sample Per Pixel</b></p>
+		<img src="./images/Task2_2_SS1_cropped.png" width="650px" />	
+	</div>
+
+	<div class="container">
+		<p><b>4 Samples Per Pixel</b></p>
+		<img src="./images/Task2_2_SS4_cropped.png" width="650px" />	
+	</div>
+
+	<div class="container">
+		<p><b>9 Samples Per Pixel</b></p>
+		<img src="./images/Task2_2_SS9_cropped.png" width="650px" />	
+	</div>
+
+	<div class="container">
+		<p><b>16 Samples Per Pixel</b></p>
+		<img src="./images/Task2_2_SS16_cropped.png" width="650px" />	
+	</div>
 
 	</center>
 	<p>The higher sample counts smooth out the jagged edges found in the particularly sharp 
@@ -138,14 +133,14 @@
 		out high frequency changes from the image. These high frequency changes, like the harsh
 		 edge of a triangle can cause aliasing and other artifacts. By supersampling we filter 
 		 out these high frequencies and leave only the smooth low frequencies. </p>
-	<center><h3>Part 3 : Transforms</h3></center>
+	<h3>Part 3 : Transforms</h3>
 	<p>That was a lot of words, here is a hand standing cube man made using transforms to control 
 		his body and limbs using a hierarchical structure. </p>
 	<center>
 	<img src="./images/Task3.png" style="width:480px;">
 	</center>
 
-	<center><h3>Part 4: Barycentric Coordinates</h3></center>
+	<h3>Part 4: Barycentric Coordinates</h3>
 	<p>Barycentric Coordinates are a way to represent a point's position within a triangle.
 		 The three values of the coordinate essentially store the weights of each triangle 
 		 vertex. In order to calculate the cartesian coordinates, you simply take the weighted
@@ -166,23 +161,75 @@
 			</center>
 
 
-			<center><h3>Part 5: Pixel Sampling</h3></center>
-			In this task I implemented texture mapping. To do this I sampled each pixel to get it’s barycentric coordinates and used those to look up the corresponding color in a texture file. A question arises however when that texture look up does not land exactly on the center of a pixel. There are two common answers to this question. One is to simply find the closest pixel to the sample point and use that color entirely. This is called nearest sampling. This can cause the resulting image to look pixelated because there is a harsh cutoff from one pixel to the next. The other option is to take a weighted average of the nearby pixels. This solution is called bilinear sampling. This approach is great when we want to avoid the pixelated look caused by nearest sampling. Here are some examples of the two methods:
+			<h3>Part 5: Pixel Sampling</h3>
+			<p>In this task I implemented texture mapping. To do this I sampled each pixel to get it’s barycentric coordinates and used those
+				 to look up the corresponding color in a texture file. A question arises however when that texture look up does not land exactly
+				  on the center of a pixel. There are two common answers to this question. One is to simply find the closest pixel to the sample 
+				  point and use that color entirely. This is called nearest sampling. This can cause the resulting image to look pixelated because 
+				  there is a harsh cutoff from one pixel to the next. The other option is to take a weighted average of the nearby pixels. This solution 
+				  is called bilinear sampling. This approach is great when we want to avoid the pixelated look caused by nearest sampling. Here are some
+				   examples of the two methods:</p>
 			
-			//images
+	<div class="container">
+		<p><b>Nearest Pixel Sampling, 1 Sample Per Pixel</b></p>
+		<img src="./images/Task5_Nearest_SS1.png" width="650px" />	
+	</div>
+	
+	<div class="container">
+		<p><b>Nearest Pixel Sampling, 16 Samples Per Pixel</b></p>
+		<img src="./images/Task5_Nearest_SS16.png" width="650px" />	
+	</div>
+
+	<div class="container">
+		<p><b>Bilinear Pixel Sampling, 1 Sample Per Pixel</b></p>
+		<img src="./images/Task5_Bilin_SS1.png" width="650px" />	
+	</div>
+
+	<div class="container">
+		<p><b>Bilinear Pixel Sampling, 16 Sample Per Pixel</b></p>
+		<img src="./images/Task5_Bilin_SS16.png" width="650px" />	
+	</div>		
 			
-			There will be the largest difference between nearest and bilinear sampling when there are a lot of high frequency changes in the image. Bilinear sampling serves a similar purpose to super sampling, but with reduced costs. It manages to blur out some of the high frequencies from the image to make it more pleasant on the eye. 
+			<p>There will be the largest difference between nearest and bilinear sampling when there are a lot of high frequency changes in the image.
+				 Bilinear sampling serves a similar purpose to super sampling, but with reduced costs. It manages to blur out some of the high frequencies
+				  from the image to make it more pleasant on the eye. </p>
 			
 			
-			Task 6: level sampling
+			<h3>Part 6: Level Sampling</h3>
 			
-			Sometimes, a texture image is actually too high resolution for the size of triangle we are trying to draw it on. This can cause aliasing because the high resolution can create high frequency changes, which are not good. The solution to this problem is to create multiple levels of image resolution for the texture called mipmaps. 
+			<p>Sometimes, a texture image is actually too high resolution for the size of triangle we are trying to draw it on. This can cause aliasing because 
+				the high resolution can create high frequency changes, which are not good. The solution to this problem is to create multiple levels of image 
+				resolution for the texture called mipmaps. </p>
 			
-			Level sampling adds another tool to our arsenal to fight the high frequencies of our image. Level sampling, pixel sampling, and super sampling each have their own pros and cons. Super sampling is incredibly versatile. It can solve both the jaggedness of edges for triangles, and the aliasing problems of image textures. Unfortunately, super sampling is incredibly slow. In order to supersample, the image must first be rendered at a higher resolution, drastically increasing the time to render a frame. Pixel and level sampling are a lot more efficient, as they do not require a high resolution render to work. Level sampling does sacrifice memory usage for the sake of runtime, having to store several levels of detail for each texture used in a project. And neither method can help with aliasing problems arising from geometry, only textures.
+			<p>Level sampling adds another tool to our arsenal to fight the high frequencies of our image. Level sampling, pixel sampling, and super sampling 
+				each have their own pros and cons. Super sampling is incredibly versatile. It can solve both the jaggedness of edges for triangles, and the
+				 aliasing problems of image textures. Unfortunately, super sampling is incredibly slow. In order to supersample, the image must first be rendered
+				  at a higher resolution, drastically increasing the time to render a frame. Pixel and level sampling are a lot more efficient, as they do not require
+				   a high resolution render to work. Level sampling does sacrifice memory usage for the sake of runtime, having to store several levels of detail for each
+				    texture used in a project. And neither method can help with aliasing problems arising from geometry, only textures.</p>
 			
-			Here are some images showcasing the effects of level and pixel sampling. In order to better show the effects of the sampling methods, the image has been shrunk down to create some aliasing artifacts, especially around the fork.
+			<p>Here are some images showcasing the effects of level and pixel sampling. In order to better show the effects of the sampling methods, the image has been 
+				shrunk down to create some aliasing artifacts, especially around the fork.</p>
 			
-			//images
-			
+	<div class="container">
+		<p><b>0 Level Sampling, Nearest Pixel Sampling</b></p>
+		<img src="./images/Task6_L_ZERO_P_NEAREST.png" width="650px" />	
+	</div>
+	
+	<div class="container">
+		<p><b>0 Level Sampling, Bilinear Pixel Sampling</b></p>
+		<img src="./images/Task6_L_ZERO_P_LINEAR.png" width="650px" />	
+	</div>
+
+	<div class="container">
+		<p><b>Nearest Level Sampling, Nearest Pixel Sampling</b></p>
+		<img src="./images/Task6_L_NEAREST_P_NEAREST.png" width="650px" />	
+	</div>
+
+	<div class="container">
+		<p><b>Nearest Level Sampling, Bilinear Pixel Sampling</b></p>
+		<img src="./images/Task6_L_NEAREST_P_LINEAR.png" width="650px" />	
+	</div>		
+
 </body>
 </html>
