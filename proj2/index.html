@@ -1,7 +1,286 @@
+<!DOCTYPE html>
 <html>
-	<head>
-	</head>
-	<body>
-		Project 2 here
-	</body>
+<head>
+	<link rel="stylesheet" type="text/css" href="./styles/main.css">	
+</head>
+
+<body>
+	<h1>CS 184 Project 2</h1>
+	
+	
+	<h3>Part 1 : Bezier Curves with 1D de Casteljau Subdivision</h3>
+	<p>In this section I implemented de Casteljau's algorithm for bezier curves. de Casteljau's algorithm involves
+		bisecting each line a certain percentage (t) between the control points in order to generate new control points.
+		At each step the number of control points is decreased by one, so by performing this process until there is only
+		one control point left we can generate a single point on the final curve.
+	</p>
+	<center>
+		<img src="./images/Part1_1.png" width="30%" />
+		<img src="./images/Part1_2.png" width="30%" />
+		<img src="./images/Part1_3.png" width="33%" />
+		<img src="./images/Part1_4.png" width="30%" />
+		<img src="./images/Part1_5.png" width="30%" />
+		<img src="./images/Part1_6.png" width="30%" />
+	</center>
+	<p> By changing the percentage used to bisect the lines we can change where on the curve we are drawing. 
+		The final curve is defined by the algorithm performed at each value of t.
+	</p>
+	<center>
+		<img src="./images/Part1_9.png" width="28%" />
+		<img src="./images/Part1_7.png" width="30%" />
+		<img src="./images/Part1_8.png" width="30%" />
+	</center>
+	<p> And by moving the points we can define new curves.</p>
+	<center>
+		<img src="./images/Part1_10.png" width="30%" />
+	</center>
+	
+
+
+	<h3>Part 2 : Bezier Surfaces with Separable 1D de Casteljau</h3>
+	<p> De Casteljau's algorithm extends fairly naturally into 3D surfaces. Instead of taking in a list
+		of points, we instead work with a grid of points. We perform de Casteljau's algorithm as described 
+		before on each row in this grid. Iterating all the way through provides us with one point for each row.
+		Now we have a column of individual points so we can run de Casteljau's algorithm again to get a final point
+		on the surface. The total surface is then defined by evaluating this at every value for t in both stages of row 
+		and column.
+	</p>
+	<center>
+		<img src="./images/bezSurf_2.png"  />
+	</center>
+	<center>
+		<img src="./images/Part2.png"  />
+	</center>
+
+
+	<h3>Part 3 : Area-Weighted Vertex Normals</h3>
+	<p>In order to do shading calculations like phong shading it is important to calculate the normals of each vertex 
+		in the mesh. The process for this is relatively simple. Iterate over the faces that share this vertex (using a 
+		half-edge data structure). For each face, calculate it's area weighted normal by taking the cross product of 2 
+		of the edges. Add all those normals together and normalize the result to get the final normal for the vertex.
+	</p>
+	<center>
+		<div class="container" >
+			<p>Flat Shading</p>
+			<img src="./images/Part3_1_W.png" width="600" />
+		</div>
+		<div class="container" >
+			<p>Phong Shading</p>
+			<img src="./images/Part3_2_W.png" width="600" />
+		</div>
+	</center>
+	<center>
+		<img src="./images/Part3_1.png" width="600" />
+		<img src="./images/Part3_2.png" width="600" />
+	</center>
+	<h3>Part 4: Edge Flip</h3>
+	<p>In this step of the project I implemented the edge flip operation. Since we are using a half-edge data structure
+		I drew out and labeled the half edges of the 2 triangles before and after the operation to assist in reassigning 
+		all the pointers correctly. This process went relatively smoothly. Writing everything out, while tedious, proved 
+		very helpful, especially with the more complicated mesh operations to come.
+	</p>
+	<center>
+		<div class="container" >
+			<p>Before Flip</p>
+			<img src="./images/HE_3.png" width = "400"/>
+		</div>
+		
+		<div class="container" >
+			<p>After Flip</p>
+			<img src="./images/HE_4.png" width="400" />
+		</div>
+	</center>
+	<center>
+		<img src="./images/Part4_1.png" width="400" />
+		<img src="./images/Part4_2.png" width="400" />
+	</center>	
+	<center>
+		<img src="./images/Part4_3.png" width="400" />
+		<img src="./images/Part4_4.png" width="400" />
+	</center>
+	
+	
+
+	<h3>Part 5: Edge Split </h3>
+	<p>The edge split operation was similar to implement, though this time it involved the creation of new vertices,
+		edges, halfedges, and faces. Like before I drew out the structure to help with managing everything. This took 
+		a bit more debugging than the flip, but using the provided tools to follow the half edges it was relatively simple.
+
+	</p>
+	<center>
+		<div class="container" >
+			<p>Before Split</p>
+			<img src="./images/HE_1.png" width = "400"/>
+		</div>
+		
+		<div class="container" >
+			<p>After Split</p>
+			<img src="./images/HE_2.png" width="400" />
+		</div>
+	</center>
+	<center>
+		<img src="./images/Part5_1.png" width="400" />
+		<img src="./images/Part5_2.png" width="400" />
+	</center>
+	<center>
+		<img src="./images/Part5_3.png" width="400" />
+		<img src="./images/Part5_4.png" width="400" />
+	</center>	
+	<p>The edge split method used in this problem does not work for edges on the boundaries of the mesh. So for a bit of an extra 
+		challenge as well as to allow for extra smoothing operations later I implemented a special case for boundary edges. 
+	</p>
+	<center>
+		
+		<img src="./images/HE_5.png" width="400" />
+		<img src="./images/HE_6.png" width="400" />
+	</center>
+	<center>
+		<img src="./images/Part5_5.png" width="400" />
+		<img src="./images/Part5_6.png" width="400" />
+	</center>
+	
+
+			
+	<h3>Part 6: Loop Subdivision for Mesh Upsampling</h3>
+	<p>Now that we can flip and split edges I was able to implement loop subdivision.</p>
+	<center>
+		<p>Input</p>
+		<img src="./images/Part6_5.png" width = "400"/>
+		<img src="./images/Part6_1.png" width="400" />
+	</center>
+	
+	<center>
+		<p>Step 1: Split Edges</p>
+		<img src="./images/Part6_6.png" width="400" />
+		<img src="./images/Part6_4.png" width="400" />
+	</center>
+	<p>The first step involves splitting every edge in the mesh. As you can see this creates some weird patterns
+		though.
+	</p>
+	<center>
+		<p>Step 2: Flip Edges</p>
+		<img src="./images/Part6_7.png" width="400" />
+		<img src="./images/Part6_2.png" width="400" />
+	</center>
+	<p>In order to fix these weird patterns we need to flip any edge that connects a new and old vertex. This fixes
+		all the topology, but the mesh has not been smoothed at all yet.
+	</p>
+	<center>
+		<p>Step 3: Move Vertices</p>
+		<img src="./images/blank.png" width="400"/>
+		<img src="./images/Part6_3.png" width="400" />
+	</center>
+	<p>Finally in order to actually smooth the mesh we need to move the new and old vertices using specific rules. 
+		This involves taking a weighted average of the surrounding vertices in order to calculate. While the movement 
+		of the vertices doesn't happen until after the splits and flips are finished, the calculation of the new positions
+		actually happens first because the mesh is simpler at that time.
+	</p>
+
+	<center>
+		<p>Smoothing With Boundaries</p>
+		<img src="./images/Part6_8.png" width="45%" />
+		<img src="./images/Part6_9.png" width="45%" />
+	</center>
+	<p>After implementing the boundary edge split in the previous part I was able to implement loop subdivision on meshes with boundaries.
+		This did also involve a new rule for the weighted average to calculate the new positions of vertices on the boundary. (As
+		described <a href="https://graphics.pixar.com/library/SEC/supplemental.pdf">here</a>)
+	</p>
+
+	<p>Loop subdivision is far from perfect however. Let's see what happens if we try to smooth a cube.</p>
+	<center>
+		<img src="./images/cube_1.png" width="19%" />
+		<img src="./images/cube_2.png" width="19%" />
+		<img src="./images/cube_3.png" width="19%" />
+		<img src="./images/cube_4.png" width="19%" />
+		<img src="./images/cube_5.png" width="19%" />
+	</center>
+	<p>This irregular shape happens because the degrees of the vertices are all different depending on which way the square 
+		is split into 2 triangles. One fix for this is to split all the faces into 4 triangles so that all the corner vertices
+		have a degree of 6 like this.
+	</p>
+	<center>
+		<img src="./images/cube_6.png" width="19%" />
+		<img src="./images/cube_7.png" width="19%" />
+		<img src="./images/cube_8.png" width="19%" />
+		<img src="./images/cube_9.png" width="19%" />
+		<img src="./images/cube_10.png" width="19%" />
+	</center>
+
+	<p>There are other subdivision algorithms that handle this problem better. One of the most common ones is Catmull-Clark subdivion
+		which requires the mesh to be defined by quads instead of triangles so it was not feasible to implement with the provided project
+		code unfortunately.
+	</p>
+	<p> Instead, I <i>attempted</i> to implement √3 subdivision (based on this paper <a href="https://www.graphics.rwth-aachen.de/media/papers/sqrt31.pdf">here</a>). 
+		This involved a new split method to split a face into 3 faces like this.</p>
+
+	<center>
+		<div class="container" >
+			<p>Before Split</p>
+			<img src="./images/HE_7.png" width = "400"/>
+		</div>
+		
+		<div class="container" >
+			<p>After Split</p>
+			<img src="./images/HE_8.png" width="400" />
+		</div>
+	</center>
+	
+	<center>
+		<img src="./images/root3_2.png" width="400" />
+		<img src="./images/root3_1.png" width="400" />
+	</center>
+	<p>Putting this together with a similar approach to loop subdivision we can increase the mesh resolution like this.</p>
+	<center>
+		<p>Input</p>
+		<img src="./images/root3_3.png" width="400" />
+	</center>
+	<center>
+		<p>Split Faces</p>
+		<img src="./images/root3_4.png" width="400" />
+	</center>
+	<center>
+		<p>Flip Edges</p>
+		<img src="./images/root3_5.png" width="400" />
+	</center>	
+	<p>After 2 iterations of the √3 subdivision each original square has been split into 9 smaller squares.</p>
+	<center>
+		<img src="./images/root3_9.png" width="400" />
+	</center>
+	<p>Unfortunately updating the vertex position proved difficult with this method. The √3 algorithm is primarily designed for the case where 
+		the degree of each vertex is 6, and the case for extraneous vertices is nontrivial. Unfortunately the files I am working with primarily have degrees
+		other than 6 for most vertices. In retrospect this was a bad algorithm to chose to implement. I was not able to get it working in time to 
+		present for this project. So at this moment the final "smoothed" result looks something like this. (after 3 subdivisions)
+	</p>
+	<center>
+		<img src="./images/root3_6.png" width="20%" />
+		<img src="./images/root3_7.png" width="20%" />
+	</center>
+	<p>So my implementation of √3 subdivision was not particularly successful, but I decided to still share it here to show what I think
+		went well, and what didn't.
+	</p>
+			
+	<h3>Part 7: Extra</h3>	
+	<p>Finally I experimented with importing custom .dae files. This is a file I modeled in Autodesk Maya.
+	</p>
+	<center>
+		<div class="container" >
+			<p>0 Subdivisions</p>
+			<img src="./images/Part7_1.png" width = "400"/>
+		</div>
+		<div class="container" >
+			<p>1 Subdivision</p>
+			<img src="./images/Part7_2.png" width = "400"/>
+		</div>
+		<div class="container" >
+			<p>2 Subdivisions</p>
+			<img src="./images/Part7_3.png" width = "400"/>
+		</div>
+	</center>
+	<p>And here is the final shaded product.</p>
+	<center>
+		<img src="./images/Part7_4.png" />
+	</center>
+	
+	
+</body>
 </html>
