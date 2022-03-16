@@ -1,7 +1,645 @@
 <html>
 	<head>
+		<link rel="stylesheet" type="text/css" href="./styles/main.css">	
 	</head>
 	<body>
-		Project 3-1 here
+		<h1>CS 184 Project 3-1</h1>
+		<p>Note: all renders have been done using 12 threads at a resolution of 480 X 360</p>
+		<h3>Part 1 : Ray Generation and Scene Intersection</h3>
+		<p>In order to start ray tracing, we need rays. So to start out with I implemented a ray generation algorithm that would take in the x, y coordinates in screen space and turn those into rays in world
+			space based on the camera's fov. This involved translating the screen coordinates into camera space based on the fov, and then converting from camera space to world space based on the camera's 
+			position and rotation in the scene.</p>
+		<p>Now that we have rays, we need a way to detect when they intersect with the scene. There are two primitive objects I implemented in this section. The first was a simple triangle intersection algorithm.
+			The process of this was done similarly to project 1, but now in 3 dimensions. Since the barycentric coordinates would be essential after the collision anyway, I used the efficient barycentric coordinate
+			calculation we learned in class and checked if those coordinates corresponded to a position inside the triangle. After implementing this I was able to render scenes with normal based shading.
+		</p>
+		<center>
+			<img src="./images/Part1_1.png" />
+			<img src="./images/Part1_2.png"/>
+		</center>
+		<p>The other primitive I implemented was sphere intersection. This process was similar to the triangle intersection but now we are solving the equation for a sphere. This part led to some troubles down the line
+			because a ray will likely intersect the sphere twice and it is important to return the correct intersection. If you do not, it can cause interesting behavior when calculating lighting later on. After 
+			implementing this I was able to render spheres.
+		</p>
+		<center>
+			<img src="./images/Part1_3.png" />
+		</center>
+
+		<h3>Part 2 : Bounding Volume Hierarchy</h3>
+		<p>The naive approach to checking for ray collisions involves checking the ray against every triangle in the scene. This approach gets very slow as the number of triangles increases. Luckily there are several 
+			approaches to speed this up. The one I implemented in this part is called bounding volume hierarchy. The idea of this is very similar to that of a binary tree. We create a large bounding  box around every 
+			triangle in the scene. Then split the set of triangles in half based on some heuristic and create a smaller bounding box around that set. This process continues, until the set of triangles in the "leaf" nodes 
+			of this binary tree are small enough. To check for ray collisions, all you need to do is check for collisions with the top bounding box. If it collides you then can check it's two children, and repeat all the way 
+			until a leaf node where you can check the triangles. 
+		</p>
+		<center>
+			<img src="./images/Part2_7.png" height = "200"/>
+			<img src="./images/part2_8.png" height = "200"/>
+			<img src="./images/Part2_9.png" height = "200"/>
+			<img src="./images/Part2_10.png" height = "200"/>
+			<img src="./images/Part2_11.png" height = "200"/>
+			<img src="./images/Part2_12.png" height = "200"/>
+			<img src="./images/Part2_13.png" height = "200"/>
+			<img src="./images/Part2_14.png" height = "200"/>
+			<img src="./images/Part2_15.png" height = "200"/>
+			<img src="./images/Part2_16.png" height = "200"/> 
+			<img src="./images/Part2_17.png" height = "200"/>
+			<img src="./images/Part2_18.png" height = "200"/>
+		</center>
+		<p>The choice of heuristic is a complicated one. For this project I went with this approach: Find axis with the widest range (furthest distance between min and 
+			max position), then split the set of triangles around the midpoint of that axis. This heuristic is not perfect when it comes to efficiency, but it still provides a significant speedup.</p>
+		<center>
+			<div class="container" >
+				<p>5,856 Triangles</p>
+				<img src="images/part2_1.png"/>
+				<p>Without BVH: 11.5161s</p>
+				<p>With BVH: 0.0344s</p>
+			</div>
+			<div class="container" >
+				<p>7,884 Triangles</p>
+				<img src="images/part2_3.png"/>
+				<p>Without BVH: 20.5340s</p>
+				<p>With BVH: 0.0475s</p>
+			</div>
+			<div class="container" >
+				<p>28,588 Triangles</p>
+				<img src="images/part2_5.png"/>
+				<p>Without BVH: 90.1177s</p>
+				<p>With BVH: 0.0782s</p>
+			</div>
+		</center>
+		<p>As you can see the speedup for BVH is incredible. This comes down to one simple factor, the runtime of the naive approach scales linearly with the number of triangles, while the runtime of
+			the BVH approach scales roughly with the log of the number of triangles. The result of this is massive speedups with a large numbers of triangles. Without BVH the rest of this project would be nearly impossible
+			to complete in a way that wouldn't take hours to render.
+		</p>
+		<p>Here are two photos that would be nearly impossible to render with the naive approach, likely taking several minutes each. But with the BVH both of these scenes can be rendered in about 0.06s</p>
+		<center>
+			<div class="container" >
+				<p>133,796 Triangles</p>
+				<img src="images/part2_19.png"/>
+				<p>0.0647s</p>
+			</div>
+			<div class="container" >
+				<p>100,012 Triangles</p>
+				<img src="images/part2_20.png"/>
+				<p>0.0515s</p>
+			</div>			
+		</center>
+
+		<h3>Part 3 : Direct Illumination</h3>
+		<p>In this approach I implemented two approaches for direct illumination. The first, more naive, approach was uniform hemisphere sampling. The way this works is that is that for each pixel a ray is shot out,
+			upon collision we need calculate the lighting at that point. In order to do that with hemisphere sampling we shoot out several rays from that point in random directions (in a hemisphere aligned with the 
+			normal of the object). We then check each of those rays to see if it hit a light. There is a fatal flaw in this approach however. In many scenes, in most directions there are no lights. So most of the rays shot
+			out serve absolutely no function other than to waste computation. This is where importance sampling comes in. With this approach we only sample in places where there is likely going to be a light. So for each light
+			in the scene we sample rays directly towards it, and check for collisions on the way to know whether or not the point is in shadow. This results in a much less noisy image.
+		</p>
+		<center>
+			<p>Pixel Samples: 16 | Light Samples: 16</p>
+			<div class="container" >
+				<p>Hemisphere Sampling</p>
+				<img src="images/part3_2.png"/>
+				<p>24.6633s</p>
+			</div>
+			<div class="container" >
+				<p>Importance Sampling</p>
+				<img src="images/part3_1.png"/>
+				<p>18.2822s</p>
+			</div>
+		</center>
+		<center>
+			<div class="container" >
+				<img src="images/part3_4.png"/>
+				<p>13.3191s</p>
+			</div>
+			<div class="container" >
+				<img src="images/part3_3.png"/>
+				<p>10.1672s</p>
+			</div>
+		<p>To compare the effect of the number of light samples let's look at this scene with multiple values.</p>
+		<center>
+			<p>Importance Sampling | Pixel Samples: 16</p>
+			<div class="container" >
+				<p>Light Samples: 1</p>
+				<img src="images/part3_6.png"/>
+				<p>1.4689s</p>
+			</div>
+			<div class="container" >
+				<p>Light Samples: 4</p>
+				<img src="images/part3_7.png"/>
+				<p>3.1132s</p>
+			</div>
+			<div class="container" >
+				<p>Light Samples: 16</p>
+				<img src="images/part3_8.png"/>
+				<p>11.2910s</p>
+			</div>
+			<div class="container" >
+				<p>Light Samples: 64</p>
+				<img src="images/part3_9.png"/>
+				<p>47.0429s</p>
+			</div>
+		</center>
+		<p>As you can see, when using importance sampling the areas fully illuminated, or fully in shadow converge on the correct value very quickly. However points that are only partially illuminated by the light, like 
+			the penumbra of the shadow appear very noisy at low levels of light sampling. This is because there is a random chance of the ray being cast either hitting the light or not because the light source is partially
+			occluded. So more rays are needed for this value to converge correctly.
+		</p>
+		<p>Another advantage importance sampling can give us is point lights. In the hemisphere sampling scheme point lights are essentially useless. The odds of a random ray intersecting with a specific point are 
+			essentially 0. However with importance sampling we sample the point light directly. This allows us to render scenes like this.
+		</p>
+		<center>
+			<div class="container" >
+				<img src="images/part3_10.png"/>
+				<p>37.1562s</p>
+			</div>
+		</center>
+		<h3>Part 4 : Global Illumination</h3>
+		<p>Direct lighting is nice to calculate shadows but it is not perfect. In the real world light bounces. If an object is held close to a red wall, it will have a bit of red light shining on it that 
+			bounced off the wall. The goal of global illumination is to simulate this kind of behavior with light. In order to achieve this each point we sample needs to shoot out another ray to simulate a bounce of light.
+			That ray then simulates another bounce and so on until we reach a maximum ray depth. For the sake of runtime there is also a random chance that any ray will stop before reaching the maximum depth,
+			 this approach is called russian roulette.
+		</p>
+		<p>Here is a scene rendered using just direct illumination like before:</p>
+		<div class="container" >
+			<img src="images/part4_1.png"/>
+			<p></p>
+		</div>
+		<p>And this is just the global illumination for this scene. </p>
+		<div class="container" >
+			<img src="images/part4_2.png"/>
+			<p></p>
+		</div>
+		<p>As you can see the bottom of the bunny is well lit because of light bouncing off the floor, and the sides are lit based on the color of the nearby walls.
+			Interestingly the top of the bunny is actually the darkest part despite it being closest to the light. The reason for this is that there aren't many things indirectly shining on the top. The main source would be 
+			the roof, but the roof is not as well lit as the floor so in this case where we only look at indirect illumination, the bottom of the bunny receives more light.</p>
+		<p>Pixel Samples: 1024 | Light Samples: 4</p>
+		<div class="container" >
+			<p>Max Ray Depth: 0</p>
+			<img src="images/part4_4.png"/>
+			<p>6.3263s</p>
+		</div>
+		<div class="container" >
+			<p>Max Ray Depth: 1</p>
+			<img src="images/part4_3.png"/>
+			<p>83.8524s</p>
+		</div>
+		<div class="container" >
+			<p>Max Ray Depth: 2</p>
+			<img src="images/part4_5.png"/>
+			<p>359.8319s</p>
+		</div>
+		<div class="container" >
+			<p>Max Ray Depth: 3</p>
+			<img src="images/part4_6.png"/>
+			<p>453.8679s</p>
+		</div>
+		<div class="container" >
+			<p>Max Ray Depth: 100</p>
+			<img src="images/part4_7.png"/>
+			<p>620.2889s</p>
+		</div>
+
+		<p>Max Ray Depth: 4 | Light Samples: 4</p>
+		<div class="container" >
+			<p>Pixel Samples: 1</p>
+			<img src="images/part4_8.png"/>
+			<p>0.5478s</p>
+		</div>
+		<div class="container" >
+			<p>Pixel Samples: 2</p>
+			<img src="images/part4_9.png"/>
+			<p>1.0635s</p>
+		</div>
+		<div class="container" >
+			<p>Pixel Samples: 4</p>
+			<img src="images/part4_10.png"/>
+			<p>1.8842s</p>
+		</div>
+		<div class="container" >
+			<p>Pixel Samples: 8</p>
+			<img src="images/part4_11.png"/>
+			<p>4.1061s</p>
+		</div>
+		<div class="container" >
+			<p>Pixel Samples: 16</p>
+			<img src="images/part4_12.png"/>
+			<p>7.5397s</p>
+		</div>
+		<div class="container" >
+			<p>Pixel Samples: 64</p>
+			<img src="images/part4_13.png"/>
+			<p>31.3864s</p>
+		</div>
+		<div class="container" >
+			<p>Pixel Samples: 128</p>
+			<img src="images/part4_14.png"/>
+			<p>61.6739s</p>
+		</div>
+		<div class="container" >
+			<p>Pixel Samples: 1024</p>
+			<img src="images/part4_15.png"/>
+			<p>298.4211s</p>
+		</div>
+		<p>Note: for the sake of time some of these images have been rendered using the adaptive sampling from the next section. This does not change the clarity of the images, but explains the non linear 
+			scaling of the runtime for the 1024 sample render
+		</p>
+
+
+
+		<h3>Part 5 : Adaptive Sampling</h3>
+		<p>Not every pixel takes as long to compute as every other pixel. If a pixel is in a bright, flat area with few objects around it, it will converge much quicker than an area in shadow or very close to complicated
+			geometry. To account for this I implemented adaptive sampling. The main idea of adaptive sampling is to keep track of the distribution of values you are getting for each pixel. By calculating the standard deviation
+			we can determine how much the pixel has converged to it's proper value. Once this convergence gets close enough we can stop sampling. Here is a scene rendered with adaptive sampling. On the right is a heatmap 
+			showing how many samples each pixel took.
+		</p>
+		<p>Pixel Samples: 2048 | Light Samples: 1 | Max Ray Depth : 5</p>
+		<div class="container" >
+			<img src="images/part5_2.png"/>
+			<p></p>
+		</div>
+		<div class="container" >
+			<img src="images/part5_2_rate.png"/>
+			<p></p>
+		</div>
+		<p>Red corresponds to pixels that took a long time to converge, while blue pixels converged quicker. As you can see the background and the flat parts of the base farther away from the dragon were the quickest
+			to converge. The part of the base in shadow and near the dragon took slightly longer to converge because those regions are much more impacted by bounce lighting off of the dragon. There is a lot of red inside
+			the dragons mouth, and in the nooks and crannies of the model. This is because these areas involve a lot of bounce lighting to calculate correctly. Finally another interesting thing to note is that the outline
+			of the whole model has a thin layer of red. This has to do with anti-aliasing. Since individual rays within a pixel on the boundary may or may not hit the object, it takes longer for the render to converge on 
+			those pixels as it needs to figure out how much of the pixel is covered by the mesh.
+		</p>
 	</body>
 </html>
+
+<!--
+
+
+./pathtracer -t 12 -s 1024 -l 4 -m 0 -a 64 0.05 -r 480 360 -f part4_4.png ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 28588 primitives... Done! (0.0249 sec)
+[PathTracer] Rendering... 100%! (6.3263s)
+[PathTracer] BVH traced 11182122 rays.
+[PathTracer] Average speed 1.7676 million rays per second.
+[PathTracer] Averaged 4.807415 intersection tests per ray.
+[PathTracer] Saving to file: part4_4.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 1024 -l 4 -m 1 -a 64 0.05 -r 480 360 -f part4_3.png ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 28588 primitives... Done! (0.0240 sec)
+[PathTracer] Rendering... 100%! (83.8524s)
+[PathTracer] BVH traced 129633680 rays.
+[PathTracer] Average speed 1.5460 million rays per second.
+[PathTracer] Averaged 6.489193 intersection tests per ray.
+[PathTracer] Saving to file: part4_3.png... Done!
+
+./pathtracer -t 12 -s 1024 -l 4 -m 2 -a 64 0.05 -r 480 360 -f part4_5.png ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 28588 primitives... Done! (0.0381 sec)
+[PathTracer] Rendering... 100%! (359.8319s)
+[PathTracer] BVH traced 491953322 rays.
+[PathTracer] Average speed 1.3672 million rays per second.
+[PathTracer] Averaged 6.937488 intersection tests per ray.
+[PathTracer] Saving to file: part4_5.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 1024 -l 4 -m 100 -a 64 0.05 -r 480 360 -f part4_7.png ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Collecting primitives... Done! (0.0092 sec)
+[PathTracer] Building BVH from 28588 primitives... Done! (0.0208 sec)
+[PathTracer] Rendering... 100%! (620.2889s)
+[PathTracer] BVH traced 873450817 rays.
+[PathTracer] Average speed 1.4081 million rays per second.
+[PathTracer] Averaged 6.452269 intersection tests per ray.
+[PathTracer] Saving to file: part4_7.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 1 -l 4 -m 4 -a 64 0.05 -r 480 360 -f part4_8.png ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 240326 primitives... Done! (0.4289 sec)
+[PathTracer] Rendering... 100%! (0.5478s)
+[PathTracer] BVH traced 378203 rays.
+[PathTracer] Average speed 0.6904 million rays per second.
+[PathTracer] Averaged 10.565590 intersection tests per ray.
+[PathTracer] Saving to file: part4_8.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 2 -l 4 -m 4 -a 64 0.05 -r 480 360 -f part4_9.png ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 240326 primitives... Done! (0.4669 sec)
+[PathTracer] Rendering... 100%! (1.0635s)
+[PathTracer] BVH traced 748322 rays.
+[PathTracer] Average speed 0.7036 million rays per second.
+[PathTracer] Averaged 10.698513 intersection tests per ray.
+[PathTracer] Saving to file: part4_9.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 4 -l 4 -m 4 -a 64 0.05 -r 480 360 -f part4_10.png ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 240326 primitives... Done! (0.3846 sec)
+[PathTracer] Rendering... 100%! (1.8842s)
+[PathTracer] BVH traced 1484887 rays.
+[PathTracer] Average speed 0.7881 million rays per second.
+[PathTracer] Averaged 10.092024 intersection tests per ray.
+[PathTracer] Saving to file: part4_10.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 8 -l 4 -m 4 -a 64 0.05 -r 480 360 -f part4_11.png ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 240326 primitives... Done! (0.3799 sec)
+[PathTracer] Rendering... 100%! (4.1061s)
+[PathTracer] BVH traced 3021228 rays.
+[PathTracer] Average speed 0.7358 million rays per second.
+[PathTracer] Averaged 10.658108 intersection tests per ray.
+[PathTracer] Saving to file: part4_11.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 16 -l 4 -m 4 -a 64 0.05 -r 480 360 -f part4_12.png ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 240326 primitives... Done! (0.4017 sec)
+[PathTracer] Rendering... 100%! (7.5397s)
+[PathTracer] BVH traced 5982754 rays.
+[PathTracer] Average speed 0.7935 million rays per second.
+[PathTracer] Averaged 10.042387 intersection tests per ray.
+[PathTracer] Saving to file: part4_12.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 64 -l 4 -m 4 -a 64 0.05 -r 480 360 -f part4_13.png ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 240326 primitives... Done! (0.4128 sec)
+[PathTracer] Rendering... 100%! (31.3864s)
+[PathTracer] Average speed 0.7600 million rays per second.
+[PathTracer] Averaged 10.033441 intersection tests per ray.
+[PathTracer] Saving to file: part4_13.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 128 -l 4 -m 4 -a 64 0.05 -r 480 360 -f part4_14.png ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.1169 sec)
+[PathTracer] Building BVH from 240326 primitives... Done! (0.4574 sec)
+[PathTracer] Rendering... 100%! (61.6739s)
+[PathTracer] BVH traced 35778571 rays.
+[PathTracer] Average speed 0.5801 million rays per second.
+[PathTracer] Averaged 13.259677 intersection tests per ray.
+[PathTracer] Saving to file: part4_14.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 1024 -l 4 -m 4 -a 64 0.05 -r 480 360 -f part4_15.png ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\wall-e.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.1255 sec)
+[PathTracer] Building BVH from 240326 primitives... Done! (0.4156 sec)
+[PathTracer] Rendering... 100%! (298.4211s)
+[PathTracer] BVH traced 116240125 rays.
+[PathTracer] Average speed 0.3895 million rays per second.
+[PathTracer] Averaged 19.738731 intersection tests per ray.
+[PathTracer] Saving to file: part4_15.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 2048 -l 1 -m 5 -a 64 0.05 -r 480 360 -f part5_2.png ..\..\..\dae\sky\dragon.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\dragon.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0840 sec)
+[PathTracer] Building BVH from 105120 primitives... Done! (0.1838 sec)
+[PathTracer] Rendering... 100%! (209.1030s)
+[PathTracer] BVH traced 312523538 rays.
+[PathTracer] Average speed 1.4946 million rays per second.
+[PathTracer] Averaged 5.502041 intersection tests per ray.
+[PathTracer] Saving to file: part5_2.png... Done!
+[PathTracer] Job completed.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+./pathtracer -t 12 -r 480 360 -f part2_1.png ../../../dae/meshedit/cow.dae
+[PathTracer] Input scene file: ../../../dae/meshedit/cow.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 5856 primitives... Done! (0.0011 sec)
+[PathTracer] Rendering... 100%! (11.5161s)
+[PathTracer] BVH traced 171767 rays.
+[PathTracer] Average speed 0.0149 million rays per second.
+[PathTracer] Averaged 423.254659 intersection tests per ray.
+[PathTracer] Saving to file: part2_1.png... Done!
+
+./pathtracer -t 12 -r 480 360 -f part2_2.png ../../../dae/meshedit/cow.dae
+[PathTracer] Input scene file: ../../../dae/meshedit/cow.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0014 sec)
+[PathTracer] Building BVH from 5856 primitives... Done! (0.0021 sec)
+[PathTracer] Rendering... 100%! (0.0344s)
+[PathTracer] BVH traced 159960 rays.
+[PathTracer] Average speed 4.6502 million rays per second.
+[PathTracer] Averaged 2.304545 intersection tests per ray.
+[PathTracer] Saving to file: part2_2.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -r 480 360 -f part2_3.png ..\..\..\dae\sky\CBcoil.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBcoil.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 7884 primitives... Done! (0.0003 sec)
+[PathTracer] Rendering... 100%! (20.5340s)
+[PathTracer] BVH traced 169226 rays.
+[PathTracer] Average speed 0.0082 million rays per second.
+[PathTracer] Averaged 783.098927 intersection tests per ray.
+[PathTracer] Saving to file: part2_3.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -r 480 360 -f part2_4.png ..\..\..\dae\sky\CBcoil.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBcoil.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0026 sec)
+[PathTracer] Building BVH from 7884 primitives... Done! (0.0036 sec)
+[PathTracer] Rendering... 100%! (0.0475s)
+[PathTracer] BVH traced 157466 rays.
+[PathTracer] Average speed 3.3117 million rays per second.
+[PathTracer] Averaged 3.098078 intersection tests per ray.
+[PathTracer] Saving to file: part2_4.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -r 480 360 -f part2_5.png ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0101 sec)
+[PathTracer] Building BVH from 28588 primitives... Done! (0.0022 sec)
+[PathTracer] Rendering... 100%! (90.1177s)
+[PathTracer] BVH traced 166932 rays.
+[PathTracer] Average speed 0.0019 million rays per second.
+[PathTracer] Averaged 3561.514054 intersection tests per ray.
+[PathTracer] Saving to file: part2_5.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -r 480 360 -f part2_6.png ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0127 sec)
+[PathTracer] Building BVH from 28588 primitives... Done! (0.0281 sec)
+[PathTracer] Rendering... 100%! (0.0782s)
+[PathTracer] BVH traced 148091 rays.
+[PathTracer] Average speed 1.8941 million rays per second.
+[PathTracer] Averaged 4.903499 intersection tests per ray.
+[PathTracer] Saving to file: part2_6.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -r 480 360 -f part2_19.png ..\..\..\dae\sky\CBlucy.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBlucy.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0502 sec)
+[PathTracer] Building BVH from 133796 primitives... Done! (0.1499 sec)
+[PathTracer] Rendering... 100%! (0.0647s)
+[PathTracer] BVH traced 152931 rays.
+[PathTracer] Average speed 2.3652 million rays per second.
+[PathTracer] Averaged 3.080442 intersection tests per ray.
+[PathTracer] Saving to file: part2_19.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -r 480 360 -f part2_20.png ..\..\..\dae\sky\CBdragon.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBdragon.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0392 sec)
+[PathTracer] Building BVH from 100012 primitives... Done! (0.1458 sec)
+[PathTracer] Rendering... 100%! (0.0515s)
+[PathTracer] BVH traced 157477 rays.
+[PathTracer] Average speed 3.0562 million rays per second.
+[PathTracer] Averaged 2.980911 intersection tests per ray.
+[PathTracer] Saving to file: part2_20.png... Done!
+[PathTracer] Job completed.
+
+
+
+./pathtracer -t 12 -s 16 -l 16 -r 480 360 -f part3_1.png ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 28588 primitives... Done! (0.0278 sec)
+[PathTracer] Rendering... 100%! (18.2822s)
+[PathTracer] Average speed 1.8515 million rays per second.
+[PathTracer] Averaged 5.095761 intersection tests per ray.
+[PathTracer] Saving to file: part3_1.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 16 -l 16 -r 480 360 -H -f part3_2.png ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBbunny.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0095 sec)
+[PathTracer] Building BVH from 28588 primitives... Done! (0.0236 sec)
+[PathTracer] Rendering... 100%! (24.6633s)
+[PathTracer] BVH traced 37482690 rays.
+[PathTracer] Average speed 1.5198 million rays per second.
+[PathTracer] Averaged 5.715274 intersection tests per ray.
+[PathTracer] Saving to file: part3_2.png... Done!
+[PathTracer] Job completed.
+
+
+./pathtracer -t 12 -s 16 -l 16 -r 480 360 -f part3_3.png ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 14 primitives... Done! (0.0000 sec)
+[PathTracer] Rendering... 100%! (10.1672s)
+[PathTracer] BVH traced 27362236 rays.
+[PathTracer] Average speed 2.6912 million rays per second.
+[PathTracer] Averaged 2.704556 intersection tests per ray.
+[PathTracer] Saving to file: part3_3.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 16 -l 16 -r 480 360 -H -f part3_4.png ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0000 sec)
+[PathTracer] Building BVH from 14 primitives... Done! (0.0000 sec)
+[PathTracer] Rendering... 100%! (13.3191s)
+[PathTracer] BVH traced 30335541 rays.
+[PathTracer] Average speed 2.2776 million rays per second.
+[PathTracer] Averaged 3.052423 intersection tests per ray.
+[PathTracer] Saving to file: part3_4.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 16 -l 1 -r 480 360 -H -f part3_5.png ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 14 primitives... Done! (0.0000 sec)
+[PathTracer] Rendering... 100%! (1.7219s)
+[PathTracer] BVH traced 3861486 rays.
+[PathTracer] Average speed 2.2426 million rays per second.
+[PathTracer] Averaged 3.302049 intersection tests per ray.
+[PathTracer] Saving to file: part3_5.png... Done!
+[PathTracer] Job completed.
+
+
+
+./pathtracer -t 12 -s 16 -l 1 -r 480 360 -f part3_6.png ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 14 primitives... Done! (0.0000 sec)
+[PathTracer] Rendering... 100%! (1.4689s)
+[PathTracer] BVH traced 3585063 rays.
+[PathTracer] Average speed 2.4406 million rays per second.
+[PathTracer] Averaged 2.868767 intersection tests per ray.
+[PathTracer] Saving to file: part3_6.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 16 -l 4 -r 480 360 -f part3_7.png ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 14 primitives... Done! (0.0000 sec)
+[PathTracer] Rendering... 100%! (3.1132s)
+[PathTracer] BVH traced 8330995 rays.
+[PathTracer] Average speed 2.6760 million rays per second.
+[PathTracer] Averaged 2.906080 intersection tests per ray.
+[PathTracer] Saving to file: part3_7.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 16 -l 16 -r 480 360 -f part3_8.png ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Building BVH from 14 primitives... Done! (0.0000 sec)
+[PathTracer] Rendering... 100%! (11.2910s)
+[PathTracer] BVH traced 26355649 rays.
+[PathTracer] Average speed 2.3342 million rays per second.
+[PathTracer] Averaged 2.918123 intersection tests per ray.
+[PathTracer] Saving to file: part3_8.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 16 -l 64 -r 480 360 -f part3_9.png ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\CBspheres_lambertian.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0000 sec)
+[PathTracer] Building BVH from 14 primitives... Done! (0.0000 sec)
+[PathTracer] Rendering... 100%! (47.0429s)
+[PathTracer] BVH traced 103844838 rays.
+[PathTracer] Average speed 2.2075 million rays per second.
+[PathTracer] Averaged 3.079028 intersection tests per ray.
+[PathTracer] Saving to file: part3_9.png... Done!
+[PathTracer] Job completed.
+
+./pathtracer -t 12 -s 64 -l 16 -r 480 360 -f part3_10.png ..\..\..\dae\sky\dragon.dae
+[PathTracer] Input scene file: ..\..\..\dae\sky\dragon.dae
+[PathTracer] Rendering using 12 threads
+[PathTracer] Collecting primitives... Done! (0.0519 sec)
+[PathTracer] Building BVH from 105120 primitives... Done! (0.1394 sec)
+[PathTracer] Rendering... 100%! (37.1562s)
+[PathTracer] BVH traced 67969024 rays.
+[PathTracer] Average speed 1.8293 million rays per second.
+[PathTracer] Averaged 4.781113 intersection tests per ray.
+[PathTracer] Saving to file: part3_10.png... Done!
+[PathTracer] Job completed.
+-->
