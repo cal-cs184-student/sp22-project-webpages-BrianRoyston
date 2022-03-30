@@ -1,7 +1,123 @@
 <html>
 	<head>
+		<!--<style>
+			@media print
+			{
+			h3 {page-break-before:always}
+			}
+			</style>-->
+		<link rel="stylesheet" type="text/css" href="./styles/main.css">	
 	</head>
 	<body>
-		Project 3-2 here
+		<h1>CS 184 Project 3-2</h1>
+		<!--<h3>Website Link: 
+			<a href=https://cal-cs184-student.github.io/sp22-project-webpages-BrianRoyston/proj3-1/index.html>https://cal-cs184-student.github.io/sp22-project-webpages-BrianRoyston/proj3-1/index.html</a>
+		</h3> -->
+		
+		<h3>Part 1 : Mirror and Glass Materials</h3>
+		<p>In this section I implemented reflection and refraction.
+		</p>
+		<center>
+			<div class="container" >
+				<p>Ray Depth: 0</p>
+				<img src="images/Part1_1_high.png"/>
+			</div>
+			<p>At depth 0, the only thing visible is the light itself. This is no different from the first part of this project.</p>
+			<div class="container" >
+				<p>Ray Depth: 1</p>
+				<img src="images/Part1_2_high.png"/>
+			</div>
+			<p>At depth 1, we start to see the direct reflections of the light off the surface off the two spheres.</p>
+			<div class="container" >
+				<p>Ray Depth: 2</p>
+				<img src="images/Part1_3_high.png"/>
+			</div>
+			<p>Now the walls are visible in the reflections. Notice how the refraction is still not visible. This is because both 
+				the entering and exiting of the sphere count as collisions. So at depth 2, it doesn't have another bounce 
+				left for that light to actually hit something.
+			</p>
+			<div class="container" >
+				<p>Ray Depth: 3</p>
+				<img src="images/Part1_4_high.png"/>
+			</div>
+			<p>The refraction is now visible. Also, the parts of the scene like the ceiling which are not directly illuminated 
+				by the light are now visible in the reflection. The reflection of the glass sphere is still incomplete however.
+			</p>
+			<div class="container" >
+				<p>Ray Depth: 4</p>
+				<img src="images/Part1_5_high.png"/>
+			</div>
+			<p>The glass sphere can now be seen in the reflection. In addition, caustic effects can now be seen with the sphere 
+				focusing light onto the wall.
+
+			</p>
+			<div class="container" >
+				<p>Ray Depth: 5</p>
+				<img src="images/Part1_6_high.png"/>
+			</div>
+			<p></p>
+			<div class="container" >
+				<p>Ray Depth: 100</p>
+				<img src="images/Part1_7_high.png"/>
+			</div>
+			<p>This change is more subtle. The biggest change is with the effects of internal reflection in the sphere. 
+				The top of the glass sphere now has a bright spot that is created by the focusing of light as it bounces around 
+				inside the sphere.
+			</p>
+		</center>
+
+		<h3>Part 2 : Microfacet Materials</h3>
+		<p>Sometimes the interaction of light with a surface is very dependent on the small details in the surface. For example, a rough
+			metal materials depend a lot on the roughness of the surface. To account for this, we add a parameter alpha, to represent 
+			surface roughness.
+		</p>
+		<center>
+			<div class="container" >
+				<p>Alpha: 0.005</p>
+				<img src="images/Part2_1.png"/>
+			</div>
+			<div class="container" >
+				<p>Alpha: 0.05</p>
+				<img src="images/Part2_2.png"/>
+			</div>
+			<div class="container" >
+				<p>Alpha: 0.25</p>
+				<img src="images/Part2_3.png"/>
+			</div>
+			<div class="container" >
+				<p>Alpha: 0.5</p>
+				<img src="images/Part2_4.png"/>
+			</div>
+		</center>
+		<p>As alpha increases the material starts to act more and more diffuse, as the area the light reflects across gets closer 
+			to a full hemisphere.
+		</p>
+		<p>To start with we only have a function to determine the probability of a light having bounced in a specific direction.
+			If we reverse this function we can create a way to sample the bounce based on the actual likelihood of that bounce. 
+			This importance sampling, much like with direct illumination, creates a much less noisy image with the material.
+		</p>
+		<center>
+			<div class="container" >
+				<p>Hemisphere Sampling</p>
+				<img src="images/Part2_5.png"/>
+			</div>
+			<div class="container" >
+				<p>Importance Sampling</p>
+				<img src="images/Part2_6.png"/>
+			</div>
+		</center>
+		
+		<p>This process can be used to model physically accurate materials. In this example I created a material based on
+			the physical parameters of iron. In reality the reflection of light is the result of light sampled at every wavelength.
+			However, in this case we are able to just deal with how the material effects red (614 nm), green (549 nm) and blue (466 nm) light. 
+			This is stored in the Vector3D parameter eta.
+		</p>
+		<center>
+			<img src = "images/RefractiveIndexINFO.png" width = "30%"/>
+		</center>
+		<center>
+			<img src="images/wall-e_high_res_2.png"/>
+		</center>
+
 	</body>
 </html>
