@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="./styles/main.css">	
+</head>
+
+<body>
+	<h1>Dynamic Diffuse Global Illumination using Precomputed Light Field Probes</h1>
+	<h3>Summary:</h3>
+	<p>This project aims to provide a solution for real-time indirect diffuse lighting. 
+        The solution supports dynamic light sources, while the major scene geometries have 
+        to remain static.
+    </p>
+
+    <h3>Team Members:</h3>
+    <p>Brandon Shin, Brian Royston, Han Wang, William Xie</p>
+
+    <h3>Problem Description: </h3>
+    <p>Real-time global illumination is always the holy grail of computer graphics. 
+        Due to the low-frequency nature of indirect diffuse lighting, irradiance volumes 
+        (or so-called “light probes”) are widely used to simulate plausible indirect diffuse 
+        lighting in real-time. Such methods often place light probes in the scene, 
+        precompute the radiance transfer at each probe’s position offline, and store the
+        irradiance info in different formats (e.g. cubemaps, spherical harmonics, etc.).
+        Then we could reconstruct the irradiance at a surface given its world position
+        and normal direction.
+    </p>
+    <p>However, to acquire an accurate representation of the indirect diffuse lighting,
+        such methods require the rendering scene to be fully static – both in terms of the 
+        geometry, as well as the lighting conditions, which is difficult to achieve in 
+        applications such as video games. At the same time, because the light probes voxelize 
+        the scene’s indirect diffuse information at a fairly low resolution, we need to sample 
+        the nearest several probes and compute a weighted average as the final irradiance. 
+        Yet this will introduce light leaking if we only use conventional trilinear interpolation 
+        among the probes since we assume all the nearest probes are visible to the sample point. 
+        This assumption does not always hold true, especially at the boundaries between an 
+        indoor area and an outdoor area, where the inner faces of the boundaries will receive 
+        the wrong outdoor lighting due to the interpolation among the probes around.
+    </p>
+
+    <h3>Our Approach:</h3>
+    <p> We will extend based on the idea of irradiance volumes. Nvidia’s dynamic diffuse global 
+        illumination solves the issue of dynamic geometry and lighting through hardware-accelerated 
+        raytracing. In our case, to aim for a more generic solution, we will not use hardware raytracing
+        and thus have to make sacrifices: we will still require the majority of the scene geometries 
+        to remain static (allowing small dynamic objects will not create obvious visual flaws). 
+        However, the lighting condition can be changed at runtime, which is why we still describe
+        our method as “dynamic”.
+    </p>
+    <p>Our method consists of two stages – offline and runtime.</p>
+    <p>Here is the walkthrough of the offline stage:</p>
+
+    <ol type="1">
+        <li>Place light probes in the scene uniformly using a uniform grid structure.</li>
+        <li>For each probe, we capture multiple high-resolution (e.g. 256x256) cubemaps. 
+            Instead of storing radiance from each direction as the conventional irradiance 
+            volumes do, we store the visible surface properties, including albedo color, 
+            surface normal, sky visibility, and radial distance from the probe to the surface 
+            (and the distance squared for the visibility test later).</li>
+        <li>The cubemap representations of each probe will then be downscaled (taking a 
+            weighted average of the surrounding pixels) and converted into a series of low-resolution 
+            (e.g. 16x16) octahedron maps. By doing so, we reduce the number of pixels required to 
+            re-light at runtime, as well as the memory footprint, while maintaining a reasonable 
+            amount of accuracy.</li>
+    </ol>  
+
+    <p>Given the above probes, we could reconstruct the irradiance at runtime:</p>
+    <ol type="1">
+        <li>At the beginning of each frame, we re-light each pixel of the probes according to its albedo, 
+            normal, position, or skybox if the pixel is infinite far away from the probe. Optionally, 
+            we can sample the indirect lighting of the probes from the results of the previous frame 
+            (which will give us infinite light bounces in an ideal situation). We store the lighting 
+            results into octahedron maps too as radiance maps.
+        </li>
+        <li>We then prefilter the radiance maps using cosine-weighted hemispherical sampling to 
+            derive the final irradiance maps. The cost of this step is kept low as the resolution 
+            of the octahedron maps we use is very low.
+        </li>
+        <li>During the lighting stage of the scene geometry, we sample the nearest 8 probes given 
+            a surface’s world position and normal (with proper clamping on the grid’s edges). We 
+            weight the 8 probes based on the following criteria:
+            <ol type = "a">
+                <li>Trilinear interpolation based on probes’ positions.</li>
+                <li>The dot product between the direction to the probe and the sample normal.</li>
+                <li>Visibility test based on PCF occlusion test or Chebychev occlusion test 
+                    (inspired by PCF soft shadow and Variance Shadowmap).</li>
+            </ol>
+        </li>
+    </ol>
+
+    <h3>Goals & Deliverables:</h3>
+    <p>We will build a desktop application that has dynamic lighting to showcase the benefits of the 
+        solution in real-time, as well as record a short video showing the results.</p>
+    <p>We will display the frame rate of the application to indicate the performance is fine for 
+        real-time rendering. In addition, we will compare several screenshots between our solution 
+        and the others (e.g. without indirect diffuse lighting, with indirect diffuse lighting coming 
+        only from the skybox, with indirect diffuse lighting coming from the conventional irradiance 
+        volumes).</p>
+        
+    <p>The base plan is to implement the process described in the previous section, with no other 
+        optimization implemented. Currently, we will only support one directional light source, and 
+        it will not generate direct shadows. The re-lighting of the probes will be limited to basic 
+        models such as the Lambertian diffuse model or a Phong lighting model, and will not have correct 
+        shadow computation.</p>
+
+    <p>If we have more time, we might improve the solution from the following aspects:</p>
+    <ol type = "1">
+        <li>Support multi-bounce by sampling from the previous frame’s light probes.</li>
+        <li>Re-lighting and prefiltering of the probes will be time-sliced into different 
+            frames to support more probes at affordable costs.</li>
+        <li>Project the radiance map to the Spherical Harmonics basis directly so that we can 
+            extract the dominant environment lighting direction to shade transparent objects, 
+            such as fogs and volumetrics.</li>
+        <li>Implement the shadow map computation of the main light to have correct shadow rendering.</li>
+        <li>Detach the resolutions of the radial depth buffers from the surface property buffers to 
+            provide more accurate probe visibility tests.</li>
+    </ol>
+    <h3>Schedule:</h3>
+    <p><b>Week1:</b> Implement the offline processing stage: capture 
+        cubemaps, downsample, and convert them into octahedron maps.</p>
+    <p><b>Week 2 & 3:</b> Implement the generation of the irradiance maps at runtime: 
+        re-light the probes and then prefilter them.</p>
+    <p><b>Week 4:</b> Implement the sampling of the indirect diffuse lighting when rendering.</p>
+    <h3>Resources:</h3>
+    <p>This project is heavily inspired by the following 3 papers/talks:</p>
+    <ol>
+        <li><a href=https://ubm-twvideo01.s3.amazonaws.com/o1/vault/GDC+2021/Bluepoint+GDC21.pdf>
+            GDC21, Blue Points, Global Illumination in Demon’s Souls Remake</a></li>
+        <li><a href=https://research.nvidia.com/sites/default/files/pubs/2017-02_Real-Time-Global-Illumination/light-field-probes-final.pdf>
+            2017, Real-Time Global Illumination using Precomputed Light Field Probes</a></li>
+        <li><a href=https://jcgt.org/published/0008/02/01/>
+            2019, Dynamic Diffuse Global Illumination with Ray-Traced Irradiance Fields</a></li>
+    </ol>
+    <p>The papers on octahedron map representation are:</p>
+    <ol>
+        <li><a href=https://jcgt.org/published/0003/02/01/>
+            2014, A survey of efficient representations for independent unit vectors</a></li>
+        <li><a href=https://www.semanticscholar.org/paper/Octahedron-Environment-Maps-Engelhardt-Dachsbacher/fcb9a6dbdf7b4c31f94e481cf101c83b73ea6410>
+            2008, Octahedron Environment Maps</a></li>
+    </ol>
+    
+    <h3>Platform: </h3>
+    <p>MaxOS & Windows</p>
+    
+    <h3>Hardware:</h3>
+    <p>Our laptops with capable CPUs and GPUs</p>
+
+    <h3>Codebase:</h3>
+    <p>To get away from dealing with the render hardware interface directly and achieve 
+        cross-platform development, we will develop our solution in Unity. The project 
+        will be built upon William’s UltimateTAA program 
+        (<a href = https://github.com/GuardHei/UltimateTAA>https://github.com/GuardHei/UltimateTAA</a>), 
+        which has its rendering process completely changed from Unity’s original render pipeline. 
+        The existing program has a working forward+ render pipeline with a basic physically-based 
+        material system. We will add our indirect diffuse solution later.
+    </p>
+</body>
+</html>
