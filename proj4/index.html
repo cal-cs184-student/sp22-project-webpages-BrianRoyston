@@ -1,7 +1,308 @@
 <html>
 	<head>
+		<!--<style>
+			@media print
+			{
+			h3 {page-break-before:always}
+			}
+			</style>-->
+		<link rel="stylesheet" type="text/css" href="./styles/main.css">	
 	</head>
 	<body>
-		Project 4 here
-	</body>
+		<h1>CS 184 Project 4: Cloth Simulator</h1>
+		<!--<h3>Website Link: 
+			<a href=https://cal-cs184-student.github.io/sp22-project-webpages-BrianRoyston/proj3-2/index.html>
+				https://cal-cs184-student.github.io/sp22-project-webpages-BrianRoyston/proj3-2/index.html</a>
+		</h3>--> 
+    <h2 align="middle">Brian Royston, William Xie</h2>
+    <p>In the project, we have implemented a software that can simulate cloth physics via a spring-mass system, including proper inter-object collision and self collision handling. We have also rendered the cloth using a variety of different shaders.</p>
+		
+		<h3>Part 1 : Masses and springs</h3>
+		<p>In this section we built the grid of masses and springs of the cloth. We followed the specs to generate point masses (setting y-coord to 1 if the cloth orientation is HORIZONTAL, or randomize the offset for z-coord between -1/1000 to 1/1000). We store the masses in row-major order along the x-axis. After that, we create the springs to apply the 3 constraints: structual, shear, and bending. Here are the screenshots of the <i>scene/pinned2.json</i>:
+		</p>
+		<center>
+			<div class="container" >
+				<p>without any shearing constraints</p>
+				<img src="images/p1-1.png" width="400"/>
+        <p>with only shearing constraints</p>
+				<img src="images/p1-2.png" width="400"/>
+        <p>with all constraints</p>
+				<img src="images/p1-3.png" width="400"/>
+			</div>
+		</center>
+
+    <h3>Part 2 : Simulation via numerical integration</h3>
+    <p>In this part we added influences from external forces and spring correction forces. For the external forces, we use F = ma to compute and we apply this force to every mass. Then for the spring constraints, we use the Hooke's law as described in the specs if the spring is enabled.</p>
+    <p>After that we use Verlet integration to update the positions of the point masses. We approximate (v_t * dt) with (current_point_position - last_point_position). In addition, we add in a damping factor d to scale down the velocity to simulate the energy loss due to friction and etc. Meanwhile, if a point mass is pinned, we skip it. Finally, we limit the maximum distance between the two points to at most 110% rest_length to avoid extreme deformations.</p>
+		</p>
+		<center>
+			<div class="container" >
+				<p>resting state of <i>scene/pinned4.json (default params)</i></p>
+				<img src="images/p2-1.png" width="400"/>
+        <img src="images/p2-6.png" width="400"/>
+			</div>
+		</center>
+    <p>The ks value decides how strong the correct force is for a spring to correct itself to the rest_length. A small ks value represents a weak spring. When we set ks = 1, and keep all the other params unchanged, we can observe that the cloth simulation will introduce more "waves" and "folds". As a comparsion, if we make the ks as large as 10000, the cloth movement has a lot less "waves" and "folds", and it gets to the resting state very quickly. Unfortunately because most of the differences can only be observed in motion, we could not take screenshots to indicate them.</p>
+    <p>The density represents the weight of the cloth. When the density is low, the cloth is light, and there are fewer waves and folds. When the density is high, the cloth hangs down heavier and we can see more folds in the resting state.</p>
+    <center>
+			<div class="container" >
+				<p>resting state of <i>scene/pinned4.json (density = 1)</i></p>
+				<img src="images/p2-2.png" width="400"/>
+        <p>resting state of <i>scene/pinned4.json (density = 10000)</i></p>
+				<img src="images/p2-3.png" width="400"/>
+			</div>
+		</center>
+    <p>The damping value is used to simulate the energy loss due to friction or heat loss. If we set damping to 0, we will see the cloth movements have a lot of waves and folds, and oscillate back and forth for a long time. This is due to 0 energy loss in this case. However, once we set damping to 1.0, the large waves and folds disappear, the cloth slowly falls down but gets into the resting state in a short time.</p>
+    <center>
+			<div class="container" >
+				<p>rapid oscillation in <i>scene/pinned4.json (damping = 0)</i></p>
+				<img src="images/p2-4.png" width="400"/>
+        <p>slow and smooth falling in <i>scene/pinned4.json (damping = 1)</i></p>
+				<img src="images/p2-5.png" width="400"/>
+			</div>
+		</center>
+    
+    <h3>Part 3 : Handling collisions with other objects</h3>
+    <p>In this section, we implement collisions between our cloth with spheres and planes.</p>
+    <p>In terms of sphere collision, we use the distance between the sphere and the point to
+		 determine whether the point is inside the sphere. If so, we compute the new position 
+		 where we want to move the point out, and interpolate the point from its last position 
+		 according to (1.0 - friction).</p>
+
+	<center>
+		<div class="container">
+			<p>ks = 50</p>
+			<img src="./images/p3-1.png" width="400" />
+		</div>
+		<div class="container">
+			<p>ks = 500</p>
+			<img src="./images/p3-2.png" width="400" />
+		</div>
+		<div class="container">
+			<p>ks = 50,000</p>
+			<img src="./images/p3-3.png" width="400" />
+		</div>
+	</center>
+	<p>ks, refers to the spring constant for the simulated springs used to calculate the cloth's movement.
+		Unsurprisingly, as this spring constant increases, making the springs stronger, the cloth behaves 
+		rigidly because it takes more force to deform it. Reversily, if the spring constant decreases, the cloth is softer and hangs along the sphere surface closely.
+	</p>
+	
+    
+	<p>Plane collision is a bit more complicated because there is not concept of inside vs outside. 
+		The idea is that we check whether the point mass is at different sides of the plane in current 
+		and previous iteration. If so, we know the point has gone across the plane. In reality, in order to 
+	account for the surface offset, there is actually 2 planes that are checked to detect collisions with the
+	plane +/- the surface offset. </p>
+
+	<center>
+		<img src="./images/p3-4.png" width="400" />
+	</center>
+
+
+  
+    <h3>Part 4 : Handling self-collisions</h3>
+    <p>For this part we added constraints so that the cloth will not clip through itself. To core idea is that we have to make sure every point is (2 * thickness) away from each other. If not, we take average of all the correction vectors and scale it with simulation_steps to reduce the frequent sudden correction moves.</p>
+    <p>However, if we simply do a 2-level loop, the complexity if O(n^2), and is way too slow to compute. Thus, we need to accelerate the position query process. To do so, we build a spatial map of all the masses according to our hash function on the positions. Our hash function divides the 3d spaces into cells of w * h * t, where w = 3 * width / num_width_points, h = 3 * height / num_height_points, t = max(w, h). We then compute the hash using the below codes: </p>
+    <code>
+      int grid_x = floor(pos.x / w);
+      <br>
+      int grid_y = floor(pos.y / h);
+      <br>
+      int grid_z = floor(pos.z / t);
+      <br>
+      int hash_int = (grid_x << 20) + (grid_y << 10) + grid_z;
+      <br>
+      float hash_float = (float) hash_int;
+    </code>
+    <p>Finally, when we query the neighboring point masses for self collision detection, we don't have to iterate through all the other points. Instead, we only need to iterate through the neighboring cells that fall within the range of 2 * thickness (we should also process the case where the point falls on the edge). This is a huge speedup! Here are the full process of the cloth falling down on a plane:</p>
+    <center>
+			<div class="container" >
+				<p>start self collision (default params)</p>
+				<img src="images/p4-1.png" width="400"/>
+				<img src="images/p4-2.png" width="400"/>
+				<img src="images/p4-3.png" width="400"/>
+        <img src="images/p4-4.png" width="400"/>
+				<img src="images/p4-5.png" width="400"/>
+				<img src="images/p4-6.png" width="400"/>
+        <p>(almost) at resting state (default params)</p>
+			</div>
+		</center>
+    <p>When we increase the density value to 10000, the cloth has a lot more wrinkles and twists, as shown below: </p>
+    <center>
+			<div class="container" >
+				<p>start self collision (density = 10000)</p>
+				<img src="images/p4-7.png" width="400"/>
+				<img src="images/p4-8.png" width="400"/>
+				<img src="images/p4-9.png" width="400"/>
+        <img src="images/p4-10.png" width="400"/>
+        <p>(almost) at resting state (density = 10000)</p>
+			</div>
+		</center>
+    <p>The ks value has an opposite effect. When we reduce the ks value to 5, the cloth has a lot of wrinkles and twists, as shown below: </p>
+    <center>
+			<div class="container" >
+				<p>start self collision (ks = 5)</p>
+				<img src="images/p4-11.png" width="400"/>
+				<img src="images/p4-12.png" width="400"/>
+				<img src="images/p4-13.png" width="400"/>
+        <p>(almost) at resting state (ks = 5)</p>
+			</div>
+		</center>
+    <p>When we increase the ks value to 50000, the cloth is more stiff and different folds will stack on top of each other instead of twisting all together:</p>
+    <center>
+			<div class="container" >
+				<p>start self collision (ks = 50000)</p>
+				<img src="images/p4-14.png" width="400"/>
+				<img src="images/p4-15.png" width="400"/>
+				<img src="images/p4-16.png" width="400"/>
+        <p>(almost) at resting state (ks = 50000)</p>
+			</div>
+		</center>
+
+    <h3>Part 5 : Shaders</h3>
+    <p>A shader program is a piece of program that runs on the gpu. It is commonly used during the rasterization pipeline to shade the objects on the screen, though it could also be used to perform general computation outside the rasterization pipeline. A vertex shader is the program that processes each vertex of the input object. It converts necessary per-vertex information (position, normal, tangent, and etc.) from object space to clip space, waiting for the hardware to rasterize, interpolate, and apply perspective division.
+       We could use this stage to deform the mesh, e.g. bending the grass model against strong wind, or stacking up a few sin() and cos() functions to simulate gernster waves for water animation.
+       Fragment shader processes each fragment or "pixel" generated from the primitive rasterization. Its input is usually from screen space, and it will output the resultant color (or colors if supporting multiple render targets) of the corresponding fragment. This is usually the place where we actually "shade" the object, e.g. applying texture maps, computing complex lighting models, and etc.</p>
+    <p>The Blinn-Phong shading model simulates lighting in three parts: ambient, direct diffuse, and direct specular.
+       Ambient lighting is the easiest part. We simply add a constant color representing the indirect lighting.
+       Direct diffuse lighting consists of 2 components -- the surface's diffuse color k_d, and the light falloff (I / r^2) * max(0, dot(N, L)), as direct lighting uniformly spreads across the reflection hemisphere.
+       Direct specular lighting requires a specular color k_s, then a similar light falloff function (I / r^2) * max(0, dot(N, H)^p). H is the half vector here, which is the average of the light direction and the view direction. We use dot(N, H) instead of dot(N, L) here, because specular lighting depends on the view direction.
+       Meanwhile, we apply a power of p on dot(N, H) to create the constrained stretching of specular highlighting areas. Although the model is not physically based, but it creates reasonable visual result at a very low performance cost.
+    </p>
+    <center>
+			<div class="container" >
+				<p>ambient component only</p>
+				<img src="images/p5-1.png" width="400"/>
+        <p>diffuse component only</p>
+				<img src="images/p5-2.png" width="400"/>
+        <p>specular component only (p = 100)</p>
+				<img src="images/p5-3.png" width="400"/>
+        <p>complete blinn-phong lighting</p>
+        <img src="images/p5-4.png" width="400"/>
+        <p></p>
+			</div>
+		</center>
+
+    <p>Here's the texture mapping shader using a chain texture:</p>
+
+    <center>
+      <div class="container" >
+        <p></p>
+        <img src="images/p5-5.png" width="400"/>
+        <p></p>
+      </div>
+    </center>
+
+    <p>we have the bump shader and the displacement shader, which both try to add geometry details to the mesh without actually increasing the number of vertices. Bump shader changes the surface normal according to the slope of the height map to create lighting that feels like "there are extra geometry details", whereas the actual vertices remain unchanged. It is cheap, but the downside is that it can only simulate small and shallow bumps, not big and deep spikes or pits.
+     However, displacement shader actually moves the vertices along the normal direction based on the input height map. The benefit is that the vertex moves so it can create long and large bumps. However, the downside is that the quality of the bumps are highly dependent on the density of vertices. We need a lot of vertices to represent the small details from the height map.
+     When changing the sphere mesh's coarseness from 16x16 to 128x128, we can clearly see that the visual results of the bump shader remains almost unaffected, but the displacement shader does not generate visually pleasing result (very blocky bumps) when the vertex count is low.
+    </p>
+
+    <center>
+      <div class="container" >
+        <p>bump shader on sphere</p>
+        <img src="images/p5-6.png" width="400"/>
+        <p>bump shader on plane</p>
+        <img src="images/p5-7.png" width="400"/>
+        <p>displacement shader on sphere</p>
+        <img src="images/p5-8.png" width="400"/>
+        <p>displacement shader on plane</p>
+        <img src="images/p5-9.png" width="400"/>
+        <p>bump shader on 16x16 sphere mesh</p>
+        <img src="images/p5-12.png" width="400"/>
+        <p>displacement shader on 16x16 sphere mesh (the edges of the stairs are deformed largely)</p>
+        <img src="images/p5-13.png" width="400"/>
+        <p>bump shader on 128x128 sphere mesh</p>
+        <img src="images/p5-14.png" width="400"/>
+        <p>displacement shader on 128x128 sphere mesh</p>
+        <img src="images/p5-15.png" width="400"/>
+      </div>
+    </center>
+
+    <p>Here are screenshots of our mirror shader: </p>
+    <center>
+			<div class="container" >
+				<p>mirro shader on the cloth</p>
+				<img src="images/p5-10.png" width="400"/>
+        <p>mirro shader on the sphere</p>
+				<img src="images/p5-11.png" width="400"/>
+        <p></p>
+			</div>
+		</center>
+
+    <p>We have also created two custom shaders: a chain shader, and a velvet fabric shader.</p>
+    <p>For the chain shader, we use the blinn-phong model as the base, apply normal map, and then we discard the fragment if the texel has an alpha value below 0.01 to simulate the holes in the chains.</p>
+    <p>For the velvet fabric shader, we try to port a physically based fabric model to the project. Diffuse is computed using a empirical lambertian function to simulate the roughness of the cloth, and we apply light warpping to simulate sub-surface scattering at a low cost. For the direct specular light, we use the micorfacet theory, where we pick D_Charlie for the normal distribution (adopted from Imageworks' method), V_Neubelt for the visibility term, and directly assign a sheen color to the Fresnel term.
+      The indirect specular part, however, is not physically correct. We simply sample the environment map once and apply a fresnel scaling on it.
+    </p>
+    <code>
+      <br>
+      vec3 CalculateFdFabric(float roughness, vec3 diffuse) {
+        <br>
+        return mix(1.0, 0.5, roughness) * diffuse * INV_PI;
+        <br>
+      }
+      <br>
+      <br>
+      float V_Neubelt(float NdotL, float NdotV) {
+        <br>
+        return clamp(1.0f / (4.0f * (NdotL + NdotV - NdotL * NdotV)), 0, 1);
+        <br>
+      }
+      <br>
+      <br>
+      // this is adopted from Filament, which also references from Imageworks
+      <br>
+      float D_Charlie(float NdotH, float roughness) {
+        <br>
+        float invAlpha  = 1.0f / roughness;
+        <br>
+        float cos2h = NdotH * NdotH;
+        <br>
+        float sin2h = max(1.0f - cos2h, .0078125f); // 2^(-14/2), so sin2h^2 > 0 in fp16
+        <br>
+        return (2.0f + invAlpha) * pow(sin2h, invAlpha * .5f) * .5f;
+        <br>
+      }
+      <br>
+    </code>
+
+	<p>Custom Shaders: </p>
+    <center>	
+        <p>Fabric Shader (we got that nice little sheen!)</p>
+		<img src="images/p5-17.png" height="400"/>
+		<img src="images/p5-16.png" height="400"/>
+		
+		<p> Chain Shader:</p>
+		<img src="images/p5-18.png" height="400"/>
+		<img src="images/p5-19.png" height="400"/>
+		<p>This shader was essentially a Frankenstein's monster of all the previous shaders. 
+			The image textures shown below were used for the diffuse, and bump. And even the mirror shader was 
+			used to add in reflections of the environment to the surface of the chain.
+		</p>
+		<img src="images/texture_chain_diff.png" height="400"/>
+		<img src="images/texture_chain_disp.png" height="400"/>
+	</center>
+
+    <h3>Part 6 : Extra Credit</h3>
+    <p>During the write-up of part 5, we added a function to the cloth simulator to reload the shader without re-launching the program. Once we have changed the shaders and want to see the result immediately, we can now press <b>G</b> to reload in real-time! This was super helpful when I took screenshots of different components of the Blinn-Phong shader, which required me to frequently edit the shader.</p>
+	<p> Wind Simulation:</p>
+	<center>
+
+		<img src="images/ec.gif" width = "40%"/>
+	</center>
+	<p>We implemented a basic wind system for our cloth sim. The main idea was based on 4 variables. 2 of which represent
+		the direction of the wind, 1 is the strength of the wind force, and the last is the randomness of the wind.
+		These are then combined and added to the external_accelerations input for the cloth. The way randomness was handled
+		was by adding a random value, scaled by randomness, to the strength and direction each iteration. This allows
+		those values to walk around randomly as the simulation goes on. The range of this randomization is then bounded
+		so if the value gets too far away from it's original value it get's a corrective pressure back towards the 
+		original value. This is not the ideal way to handle this because it applies the same force across the entire cloth,
+		which is not entirely accurate to how wind works in the real world. An ideal simulation would have a 3d grid storing
+		wind direction at certain points in space, and these would be updated over time. This approach would have given a more 
+		accurate flapping behavior of the cloth. However this approach would have required a restructure of the way the simulation
+		handles external forces however, so we did not have time to implement it fully.
+	</p>
+</body>
 </html>
