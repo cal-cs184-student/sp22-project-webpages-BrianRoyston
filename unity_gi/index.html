@@ -1,0 +1,55 @@
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="./styles/main.css">	
+	</head>
+	<body>
+		<h1>Dynamic Diffuse Global Illumination using Light Field Probes</h1>
+		<h2>Brandon Shin, Brian Royston, Han Wang, William Xie</h2>
+		<center>
+		<img src="images/shot_2.png" width="100%"/>
+		
+		<br><br>
+		<a href="/unity_gi/final_writeup/index.html">Final Writeup</a>
+		<br><br>
+
+		<h2>Final Video</h2>
+
+	<iframe width="1280" height="720" src="https://www.youtube.com/embed/pYY7iiVkyYE" 
+	title="YouTube video player" frameborder="0" 
+	allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+	allowfullscreen></iframe>
+	<br><br>
+	<h2>Showcase</h2>
+	<div class="container" >
+		<iframe width="640" height="360" src="https://www.youtube.com/embed/0Q-WLYq55FA" 
+	title="YouTube video player" frameborder="0" 
+	allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+	allowfullscreen></iframe>
+	<iframe width="640" height="360" src="https://www.youtube.com/embed/Toj7DwVvzvQ" 
+	title="YouTube video player" frameborder="0" 
+	allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+	allowfullscreen></iframe>
+	</div>
+	<div class="container" >
+		<img src="images/shot_1.png" width="600px"/>
+		<img src="images/shot_2.png" width="600px"/>
+		<img src="images/shot_3.png" width="600px"/>
+		<img src="images/shot_5_full.png" width="600px"/>
+		<img src="images/shot_4_multi_bounce.png" width="600px"/>
+		
+		<img src="images/probe_irradiance_close.png" width="600px"/>
+		<img src="images/GI_everything.png" width="600px"/>
+	</div>
+		</center>
+	</body>
+	<script>
+		var links = document.body.getElementsByTagName("a")
+		var a = window.location.href.indexOf(".io")
+		var repo_name = window.location.href.substring(a+3)
+		for(var i = 0; i < links.length; i++){
+			var link = links[i]
+			var actual_name = link.href.substring(link.href.indexOf(".io")+4)
+			link.href = repo_name + actual_name
+		}
+	</script>
+</html>
